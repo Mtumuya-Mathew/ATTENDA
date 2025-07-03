@@ -1,48 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { PaperProvider } from 'react-native-paper';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
-import { lightTheme, darkTheme } from '../constants/theme';
-import { databaseService } from '../services/database';
-import { authService } from '../services/auth';
-import { bluetoothService } from '../services/bluetooth';
-import { syncService } from '../services/sync';
+import 'react-native-reanimated';
+
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [loaded] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  });
 
-  useEffect(() => {
-    initializeApp();
-  }, []);
-
-  const initializeApp = async () => {
-    try {
-      // Initialize services
-      await databaseService.init();
-      await authService.init();
-      await bluetoothService.init();
-      await syncService.init();
-      
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Failed to initialize app:', error);
-      setIsInitialized(true); // Still show the app even if some services fail
-    }
-  };
-
-  if (!isInitialized) {
-    return null; // Or a loading screen
+  if (!loaded) {
+    // Async font loading only occurs in development.
+    return null;
   }
 
   return (
-    <PaperProvider theme={colorScheme === 'dark' ? darkTheme : lightTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-    </PaperProvider>
+      <StatusBar style="auto" />
+    </ThemeProvider>
   );
 }
