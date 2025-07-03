@@ -50,16 +50,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string, role: string) => {
+  const login = async (regNumber: string, password: string, role: string) => {
     try {
       // TODO: Replace with actual API call
       // For now, simulate login with mock data
       const mockUser: User = {
         id: '1',
-        regNumber: 'REG12345', // Assuming regNumber is the email for simplicity
+        regNumber: regNumber, // Assuming regNumber is the email for simplicity
         name: 'John Doe',
         password: password, // Store password for registration
-        role: 'admin', // Assuming role is passed as a parameter
+        role: 'tutor', // Assuming role is passed as a parameter
         deviceId: 'device-123',
       };
 

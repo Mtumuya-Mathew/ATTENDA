@@ -16,14 +16,14 @@ export default function CoursesScreen() {
             <List.Item
               title="Mathematics 101"
               description="Calculus and Linear Algebra"
-              left={(props) => <List.Icon {...props} icon="calculate" />}
+              left={(props) => <List.Icon {...props} icon="calculator" />}
               right={() => <Chip mode="outlined">45 Students</Chip>}
             />
             
             <List.Item
               title="Physics 201"
               description="Quantum Mechanics"
-              left={(props) => <List.Icon {...props} icon="science" />}
+              left={(props) => <List.Icon {...props} icon="atom-variant" />}
               right={() => <Chip mode="outlined">32 Students</Chip>}
             />
           </Card.Content>

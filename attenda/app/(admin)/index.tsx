@@ -87,7 +87,7 @@ export default function AdminDashboard() {
             <List.Item
               title="Manage Users"
               description="Add, edit, or remove user accounts"
-              left={(props) => <List.Icon {...props} icon="people" />}
+              left={(props) => <List.Icon {...props} icon="account" />}
               right={(props) => <List.Icon {...props} icon="chevron-right" />}
               onPress={() => {}}
             />
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
             <List.Item
               title="System Settings"
               description="Configure app-wide settings"
-              left={(props) => <List.Icon {...props} icon="settings" />}
+              left={(props) => <List.Icon {...props} icon="cog" />}
               right={(props) => <List.Icon {...props} icon="chevron-right" />}
               onPress={() => {}}
             />

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 
 interface SyncContextType {
   isOnline: boolean;
@@ -16,7 +17,19 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadLastSync();
-    // TODO: Add network state listener
+
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const connected = state.isConnected && state.isInternetReachable !== false;
+      setIsOnline(true);
+      if (isOnline == true) {
+        console.log('Device is online. Attempting to sync...');
+        syncData();
+      } else {
+        console.log('Device is offline. Will sync later.');
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const loadLastSync = async () => {
@@ -32,14 +45,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const syncData = async () => {
     try {
-      // TODO: Implement actual sync logic with backend
-      console.log('Syncing data...');
+      // TODO: Replace this with actual sync logic
+      console.log('Syncing data with server...');
       
       const now = new Date().toISOString();
       await AsyncStorage.setItem('lastSync', now);
       setLastSync(now);
-      
-      console.log('Sync completed');
+
+      console.log('Sync completed at', now);
     } catch (error) {
       console.error('Error syncing data:', error);
       throw error;
@@ -48,7 +61,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const queueForSync = async (tableName: string, recordId: string, action: string, data: any) => {
     try {
-      // TODO: Add to sync queue in database
+      // TODO: Save to offline database or queue structure
       console.log(`Queued for sync: ${tableName}/${recordId} - ${action}`);
     } catch (error) {
       console.error('Error queuing for sync:', error);

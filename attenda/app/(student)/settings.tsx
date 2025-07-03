@@ -49,7 +49,7 @@ export default function SettingsScreen() {
             <List.Item
               title="Device ID"
               description="device-123456"
-              left={(props) => <List.Icon {...props} icon="smartphone" />}
+              left={(props) => <List.Icon {...props} icon="devices" />}
             />
             
             <List.Item

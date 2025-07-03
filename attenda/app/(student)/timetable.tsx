@@ -20,21 +20,21 @@ export default function TimetableScreen() {
             <List.Item
               title="Mathematics 101"
               description="9:00 AM - 10:30 AM • Room 204"
-              left={(props) => <List.Icon {...props} icon="calculate" />}
+              left={(props) => <List.Icon {...props} icon="calculator" />}
               right={() => <Chip mode="flat">Attended</Chip>}
             />
             
             <List.Item
               title="Physics 201"
               description="11:00 AM - 12:30 PM • Room 301"
-              left={(props) => <List.Icon {...props} icon="science" />}
+              left={(props) => <List.Icon {...props} icon="atom-variant" />}
               right={() => <Chip mode="outlined">Attended</Chip>}
             />
             
             <List.Item
               title="Chemistry 301"
               description="2:00 PM - 3:30 PM • Lab 101"
-              left={(props) => <List.Icon {...props} icon="biotech" />}
+              left={(props) => <List.Icon {...props} icon="flask" />}
               right={() => <Chip mode="outlined">Upcoming</Chip>}
             />
           </Card.Content>
@@ -55,7 +55,7 @@ export default function TimetableScreen() {
             <List.Item
               title="Computer Science"
               description="1:00 PM - 2:30 PM • Lab 201"
-              left={(props) => <List.Icon {...props} icon="computer" />}
+              left={(props) => <List.Icon {...props} icon="laptop" />}
             />
           </Card.Content>
         </Card>

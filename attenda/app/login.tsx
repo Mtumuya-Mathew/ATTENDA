@@ -15,14 +15,14 @@ import { router } from 'expo-router';
 
 export default function LoginScreen() {
   const [role, setRole] = useState('student');
-  const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
 
   const handleLogin = async () => {
-    if (!userName || !password) {
+    if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -31,7 +31,7 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      await login(userName, password, role as 'student' | 'tutor' | 'admin');
+      await login(email, password, role as 'student' | 'tutor' | 'admin');
       
       switch (role) {
         case 'tutor':
@@ -59,7 +59,7 @@ export default function LoginScreen() {
             Attenda
           </Text>
           <Text variant="bodyLarge" style={styles.subtitle}>
-            Mark attendance with ease
+            Proximity-based attendance system
           </Text>
         </View>
 
@@ -69,11 +69,21 @@ export default function LoginScreen() {
               Sign In
             </Text>
 
-        
+            <SegmentedButtons
+              value={role}
+              onValueChange={setRole}
+              buttons={[
+                { value: 'student', label: 'Student' },
+                { value: 'tutor', label: 'Tutor' },
+                { value: 'admin', label: 'Admin' },
+              ]}
+              style={styles.roleSelector}
+            />
+
             <TextInput
-              label="Enter your user name"
-              value={userName}
-              onChangeText={setUserName}
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
               mode="outlined"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -81,7 +91,7 @@ export default function LoginScreen() {
             />
 
             <TextInput
-              label="Enter your password"
+              label="Password"
               value={password}
               onChangeText={setPassword}
               mode="outlined"

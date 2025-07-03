@@ -6,12 +6,13 @@ import 'react-native-reanimated';
 import { AuthProvider } from '@/services/auth/AuthContext';
 import { DatabaseProvider } from '@/services/database/DatabaseContext';
 import { SyncProvider } from '@/services/sync/SyncContext';
+import { BLEProvider } from '@/services/ble/BLEContext';
 
 
 const theme = {
   ...DefaultTheme,
   colors: {
-    
+    ...DefaultTheme.colors, // This ensures elevation and other nested fields are preserved
     primary: '#6750A4',
     primaryContainer: '#EADDFF',
     secondary: '#625B71',
@@ -39,8 +40,11 @@ const theme = {
     inverseSurface: '#313033',
     inverseOnSurface: '#F4EFF4',
     inversePrimary: '#D0BCFF',
+    // Keep elevation from DefaultTheme to avoid undefined errors
+    elevation: DefaultTheme.colors.elevation,
   },
 };
+
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -56,6 +60,7 @@ export default function RootLayout() {
       <DatabaseProvider>
         <AuthProvider>
           <SyncProvider>
+            <BLEProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="login" />
@@ -64,6 +69,7 @@ export default function RootLayout() {
               <Stack.Screen name="(admin)" />
             </Stack>
             <StatusBar style="auto" />
+            </BLEProvider>
           </SyncProvider>
         </AuthProvider>
       </DatabaseProvider>

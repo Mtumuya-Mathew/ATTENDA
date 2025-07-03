@@ -72,7 +72,7 @@ export default function StudentDashboard() {
             <Button
               mode={isScanning ? "contained-tonal" : "contained"}
               onPress={handleToggleScanning}
-              icon={isScanning ? "stop" : "bluetooth-searching"}
+              icon={isScanning ? "stop" : "bluetooth-connect"}
               style={styles.scanButton}
             >
               {isScanning ? "Stop Scanning" : "Start Scanning"}
@@ -146,21 +146,21 @@ export default function StudentDashboard() {
             <List.Item
               title="Mathematics"
               description="9:00 AM - 10:30 AM"
-              left={(props) => <List.Icon {...props} icon="calculate" />}
+              left={(props) => <List.Icon {...props} icon="calculator" />}
               right={() => <Chip mode="outlined">Attended</Chip>}
             />
             
             <List.Item
               title="Physics"
               description="11:00 AM - 12:30 PM"
-              left={(props) => <List.Icon {...props} icon="science" />}
+              left={(props) => <List.Icon {...props} icon="atom-variant" />}
               right={() => <Chip mode="outlined">Upcoming</Chip>}
             />
             
             <List.Item
               title="Chemistry"
               description="2:00 PM - 3:30 PM"
-              left={(props) => <List.Icon {...props} icon="biotech" />}
+              left={(props) => <List.Icon {...props} icon="flask" />}
               right={() => <Chip mode="outlined">Upcoming</Chip>}
             />
           </Card.Content>

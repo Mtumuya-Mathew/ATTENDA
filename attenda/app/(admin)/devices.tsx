@@ -20,7 +20,7 @@ export default function DevicesScreen() {
             <List.Item
               title="John Doe's Device"
               description="device-123456 • Last seen 5 min ago"
-              left={(props) => <List.Icon {...props} icon="smartphone" />}
+              left={(props) => <List.Icon {...props} icon="devices" />}
               right={() => (
                 <View style={styles.rightContent}>
                   <Chip mode="flat" compact>Online</Chip>
@@ -32,7 +32,7 @@ export default function DevicesScreen() {
             <List.Item
               title="Jane Smith's Device"
               description="device-789012 • Last seen 2 hours ago"
-              left={(props) => <List.Icon {...props} icon="smartphone" />}
+              left={(props) => <List.Icon {...props} icon="devices" />}
               right={() => (
                 <View style={styles.rightContent}>
                   <Chip mode="outlined" compact>Offline</Chip>
@@ -52,7 +52,7 @@ export default function DevicesScreen() {
             <List.Item
               title="New Student Device"
               description="device-345678 • Waiting for approval"
-              left={(props) => <List.Icon {...props} icon="smartphone-off" />}
+              left={(props) => <List.Icon {...props} icon="devices" />}
               right={() => (
                 <View style={styles.rightContent}>
                   <Button mode="contained" compact>Approve</Button>
