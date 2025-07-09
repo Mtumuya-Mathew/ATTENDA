@@ -1,9 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, Button, List, Chip } from 'react-native-paper';
+import { Text, Button, Card } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TimetableCard, TimetableSession } from '@/components/ui/TimetableCard';
+import { AttendanceModal } from '@/components/ui/AttendanceModal';
+import { getTimetableForUser } from '@/data/mockTimetable';
 
 export default function AttendanceScreen() {
+  const [selectedSession, setSelectedSession] = useState<TimetableSession | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const timetable = getTimetableForUser('student');
+  const activeSessions = timetable.filter(session => session.isActive);
+
+  const handleSessionPress = (session: TimetableSession) => {
+    setSelectedSession(session);
+    setModalVisible(true);
+  };
+
+  const handleQuickScan = () => {
+    // Quick scan for any available sessions
+    setSelectedSession(null);
+    setModalVisible(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -11,48 +31,68 @@ export default function AttendanceScreen() {
           Mark Attendance
         </Text>
 
-        <Card style={styles.card}>
+        <Card style={styles.quickScanCard}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Available Sessions
+            <Text variant="titleMedium" style={styles.quickScanTitle}>
+              Quick Attendance
             </Text>
-            
-            <List.Item
-              title="Mathematics 101"
-              description="Dr. Smith - Room 204"
-              left={(props) => <List.Icon {...props} icon="radio" />}
-              right={() => (
-                <View style={styles.rightContent}>
-                  <Chip mode="flat" compact>5m away</Chip>
-                  <Button mode="contained" compact>Mark</Button>
-                </View>
-              )}
-            />
+            <Text variant="bodyMedium" style={styles.quickScanDescription}>
+              Scan for any nearby active sessions
+            </Text>
+            <Button
+              mode="contained"
+              onPress={handleQuickScan}
+              icon="bluetooth-connect"
+              style={styles.quickScanButton}
+            >
+              Start Quick Scan
+            </Button>
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Today's Attendance
+        <View style={styles.section}>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Active Sessions
+          </Text>
+          
+          {activeSessions.length > 0 ? (
+            activeSessions.map((session) => (
+              <TimetableCard
+                key={session.id}
+                session={session}
+                userRole="student"
+                onSessionPress={handleSessionPress}
+              />
+            ))
+          ) : (
+            <Text variant="bodyMedium" style={styles.emptyText}>
+              No active sessions available
             </Text>
-            
-            <List.Item
-              title="Physics 201"
-              description="Marked at 11:15 AM"
-              left={(props) => <List.Icon {...props} icon="check-circle" />}
-              right={() => <Chip mode="outlined">Present</Chip>}
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Today's Schedule
+          </Text>
+          
+          {timetable.map((session) => (
+            <TimetableCard
+              key={session.id}
+              session={session}
+              userRole="student"
+              onSessionPress={handleSessionPress}
             />
-            
-            <List.Item
-              title="Chemistry 301"
-              description="Session at 2:00 PM"
-              left={(props) => <List.Icon {...props} icon="clock" />}
-              right={() => <Chip mode="outlined">Upcoming</Chip>}
-            />
-          </Card.Content>
-        </Card>
+          ))}
+        </View>
       </ScrollView>
+
+      <AttendanceModal
+        visible={modalVisible}
+        session={selectedSession}
+        userRole="student"
+        onDismiss={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -68,15 +108,31 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 24,
   },
-  card: {
-    marginBottom: 16,
+  quickScanCard: {
+    marginBottom: 24,
+    backgroundColor: '#F7F2FA',
   },
-  cardTitle: {
-    marginBottom: 16,
+  quickScanTitle: {
+    marginBottom: 8,
   },
-  rightContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  quickScanDescription: {
+    marginBottom: 16,
+    color: '#666',
+  },
+  quickScanButton: {
+    alignSelf: 'flex-start',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    marginBottom: 16,
+    fontWeight: '600',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#666',
+    fontStyle: 'italic',
+    paddingVertical: 20,
   },
 });

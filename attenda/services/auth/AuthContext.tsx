@@ -5,22 +5,13 @@ export interface User {
   id: string;
   regNumber: string;
   name: string;
-  password?: string; // Optional for login, required for registration
+  password?: string;
   role: 'student' | 'tutor' | 'admin';
   deviceId?: string;
 }
 
-const mockUser: User = {
-        id: '1',
-        regNumber: 'REG12345',
-        name: 'John Doe',
-        // Assuming the role is passed as a parameter in the login function
-        role: 'student',
-        deviceId: 'device-123',
-      };
-
 interface AuthContextType {
-  user: User| null;
+  user: User | null;
   isLoading: boolean;
   login: (userName: string, password: string, role: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -52,15 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (regNumber: string, password: string, role: string) => {
     try {
-      // TODO: Replace with actual API call
-      // For now, simulate login with mock data
+      // Mock login - in production, this would be an API call
       const mockUser: User = {
-        id: '1',
-        regNumber: regNumber, // Assuming regNumber is the email for simplicity
-        name: 'John Doe',
-        password: password, // Store password for registration
-        role: 'tutor', // Assuming role is passed as a parameter
-        deviceId: 'device-123',
+        id: Date.now().toString(),
+        regNumber: regNumber,
+        name: role === 'student' ? 'John Doe' : role === 'tutor' ? 'Dr. Smith' : 'Admin User',
+        role: role as 'student' | 'tutor' | 'admin',
+        deviceId: role === 'student' ? `device-${Date.now()}` : undefined,
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(mockUser));
@@ -81,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userData: Partial<User>, password: string) => {
     try {
-      // TODO: Replace with actual API call
       const newUser: User = {
         id: Date.now().toString(),
         regNumber: userData.regNumber!,

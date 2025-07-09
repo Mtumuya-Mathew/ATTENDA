@@ -1,204 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { 
-  Text, 
-  Card, 
-  Button, 
-  Switch, 
-  Chip,
-  FAB,
-  Portal,
-  Dialog,
-  TextInput
-} from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/services/auth/AuthContext';
-import { useBLE } from '@/services/ble/BLEContext';
 import { useSync } from '@/services/sync/SyncContext';
+import { DashboardCard } from '@/components/ui/DashboardCard';
+import { TimetableCard, TimetableSession } from '@/components/ui/TimetableCard';
+import { AttendanceModal } from '@/components/ui/AttendanceModal';
+import { StatusCard } from '@/components/ui/StatusCard';
+import { getTimetableForUser } from '@/data/mockTimetable';
 
 export default function TutorDashboard() {
   const { user } = useAuth();
-  const { isAdvertising, startAdvertising, stopAdvertising } = useBLE();
   const { isOnline, lastSync } = useSync();
-  const [attendanceWindow, setAttendanceWindow] = useState(false);
-  const [showTimerDialog, setShowTimerDialog] = useState(false);
-  const [timerMinutes, setTimerMinutes] = useState('15');
+  const [selectedSession, setSelectedSession] = useState<TimetableSession | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const handleToggleAdvertising = async () => {
-    if (isAdvertising) {
-      await stopAdvertising();
-      setAttendanceWindow(false);
-    } else {
-      await startAdvertising();
-      setAttendanceWindow(true);
-    }
+  const timetable = getTimetableForUser('tutor');
+  const todaysSessions = timetable.filter(session => 
+    new Date().toDateString() === new Date().toDateString()
+  );
+
+  const stats = {
+    totalStudents: 156,
+    todayPresent: 24,
+    attendanceRate: 89
   };
 
-  const handleTimedAttendance = () => {
-    setShowTimerDialog(true);
-  };
-
-  const startTimedAttendance = async () => {
-    const minutes = parseInt(timerMinutes);
-    if (minutes > 0) {
-      await startAdvertising();
-      setAttendanceWindow(true);
-      
-      // Set timer to stop advertising
-      setTimeout(async () => {
-        await stopAdvertising();
-        setAttendanceWindow(false);
-      }, minutes * 60 * 1000);
+  const handleSessionPress = (session: TimetableSession) => {
+    if (session.isActive) {
+      setSelectedSession(session);
+      setModalVisible(true);
     }
-    setShowTimerDialog(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text variant="headlineMedium">Welcome back, {user?.name}</Text>
+          <Text variant="headlineMedium">Welcome, {user?.name}</Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            Tutor Dashboard
+            Manage your classes and attendance
           </Text>
         </View>
 
-        {/* Connection Status */}
-        <Card style={styles.statusCard}>
-          <Card.Content>
-            <View style={styles.statusRow}>
-              <MaterialIcons 
-                name={isOnline ? "wifi" : "wifi-off"} 
-                size={24} 
-                color={isOnline ? "#4CAF50" : "#F44336"} 
+        <StatusCard 
+          isOnline={isOnline}
+          status="Ready"
+          lastSync={lastSync}
+        />
+
+        <View style={styles.statsGrid}>
+          <DashboardCard
+            title="Total Students"
+            value={stats.totalStudents}
+            icon="people"
+            color="#6750A4"
+          />
+          <DashboardCard
+            title="Today Present"
+            value={stats.todayPresent}
+            subtitle="Current session"
+            icon="how-to-reg"
+            color="#4CAF50"
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Today's Classes
+          </Text>
+          
+          {todaysSessions.length > 0 ? (
+            todaysSessions.map((session) => (
+              <TimetableCard
+                key={session.id}
+                session={session}
+                userRole="tutor"
+                onSessionPress={handleSessionPress}
               />
-              <Text variant="bodyLarge">
-                {isOnline ? "Online" : "Offline"}
-              </Text>
-              <Chip mode="outlined" compact>
-                {isAdvertising ? "Broadcasting" : "Idle"}
-              </Chip>
-            </View>
-            {lastSync && (
-              <Text variant="bodySmall" style={styles.lastSync}>
-                Last sync: {new Date(lastSync).toLocaleString()}
-              </Text>
-            )}
-          </Card.Content>
-        </Card>
-
-        {/* Attendance Control */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Attendance Control
+            ))
+          ) : (
+            <Text variant="bodyMedium" style={styles.emptyText}>
+              No classes scheduled for today
             </Text>
-            
-            <View style={styles.controlRow}>
-              <Text variant="bodyLarge">Attendance Window</Text>
-              <Switch
-                value={attendanceWindow}
-                onValueChange={handleToggleAdvertising}
-              />
-            </View>
-
-            <View style={styles.buttonRow}>
-              <Button
-                mode="contained"
-                onPress={handleToggleAdvertising}
-                style={[styles.button, { flex: 1 }]}
-                disabled={isAdvertising}
-              >
-                Start Manual
-              </Button>
-              <Button
-                mode="outlined"
-                onPress={handleTimedAttendance}
-                style={[styles.button, { flex: 1 }]}
-                disabled={isAdvertising}
-              >
-                Start Timed
-              </Button>
-            </View>
-
-            {isAdvertising && (
-              <Button
-                mode="contained-tonal"
-                onPress={handleToggleAdvertising}
-                style={styles.stopButton}
-              >
-                Stop Attendance
-              </Button>
-            )}
-          </Card.Content>
-        </Card>
-
-        {/* Quick Stats */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Today's Overview
-            </Text>
-            
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <Text variant="headlineSmall">24</Text>
-                <Text variant="bodyMedium">Present</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text variant="headlineSmall">3</Text>
-                <Text variant="bodyMedium">Absent</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text variant="headlineSmall">89%</Text>
-                <Text variant="bodyMedium">Rate</Text>
-              </View>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Recent Activity
-            </Text>
-            
-            <View style={styles.activityItem}>
-              <MaterialIcons name="person-add" size={20} color="#4CAF50" />
-              <Text variant="bodyMedium">John Doe marked present</Text>
-              <Text variant="bodySmall">2 min ago</Text>
-            </View>
-            
-            <View style={styles.activityItem}>
-              <MaterialIcons name="person-add" size={20} color="#4CAF50" />
-              <Text variant="bodyMedium">Jane Smith marked present</Text>
-              <Text variant="bodySmall">5 min ago</Text>
-            </View>
-          </Card.Content>
-        </Card>
+          )}
+        </View>
       </ScrollView>
 
-      {/* Timer Dialog */}
-      <Portal>
-        <Dialog visible={showTimerDialog} onDismiss={() => setShowTimerDialog(false)}>
-          <Dialog.Title>Set Attendance Timer</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Minutes"
-              value={timerMinutes}
-              onChangeText={setTimerMinutes}
-              keyboardType="numeric"
-              mode="outlined"
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowTimerDialog(false)}>Cancel</Button>
-            <Button onPress={startTimedAttendance}>Start</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <AttendanceModal
+        visible={modalVisible}
+        session={selectedSession}
+        userRole="tutor"
+        onDismiss={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -218,53 +113,21 @@ const styles = StyleSheet.create({
     color: '#49454F',
     marginTop: 4,
   },
-  statusCard: {
-    marginBottom: 16,
-    backgroundColor: '#F7F2FA',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  lastSync: {
-    marginTop: 8,
-    color: '#49454F',
-  },
-  card: {
-    marginBottom: 16,
-  },
-  cardTitle: {
-    marginBottom: 16,
-  },
-  controlRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  button: {
-    marginVertical: 4,
-  },
-  stopButton: {
-    marginTop: 8,
-  },
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    marginBottom: 24,
   },
-  statItem: {
-    alignItems: 'center',
+  section: {
+    marginBottom: 24,
   },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
+  sectionTitle: {
+    marginBottom: 16,
+    fontWeight: '600',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#666',
+    fontStyle: 'italic',
+    paddingVertical: 20,
   },
 });

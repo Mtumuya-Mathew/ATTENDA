@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, FAB, List, Chip } from 'react-native-paper';
+import { Text, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TimetableCard, TimetableSession } from '@/components/ui/TimetableCard';
+import { AttendanceModal } from '@/components/ui/AttendanceModal';
+import { getTimetableForUser } from '@/data/mockTimetable';
 
 export default function CoursesScreen() {
+  const [selectedView, setSelectedView] = useState('schedule');
+  const [selectedSession, setSelectedSession] = useState<TimetableSession | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const timetable = getTimetableForUser('tutor');
+
+  const handleSessionPress = (session: TimetableSession) => {
+    if (session.isActive) {
+      setSelectedSession(session);
+      setModalVisible(true);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -11,29 +27,55 @@ export default function CoursesScreen() {
           My Courses
         </Text>
 
-        <Card style={styles.card}>
-          <Card.Content>
-            <List.Item
-              title="Mathematics 101"
-              description="Calculus and Linear Algebra"
-              left={(props) => <List.Icon {...props} icon="calculator" />}
-              right={() => <Chip mode="outlined">45 Students</Chip>}
-            />
-            
-            <List.Item
-              title="Physics 201"
-              description="Quantum Mechanics"
-              left={(props) => <List.Icon {...props} icon="atom-variant" />}
-              right={() => <Chip mode="outlined">32 Students</Chip>}
-            />
-          </Card.Content>
-        </Card>
+        <SegmentedButtons
+          value={selectedView}
+          onValueChange={setSelectedView}
+          buttons={[
+            { value: 'schedule', label: 'Schedule' },
+            { value: 'students', label: 'Students' },
+            { value: 'reports', label: 'Reports' },
+          ]}
+          style={styles.viewSelector}
+        />
+
+        {selectedView === 'schedule' && (
+          <View style={styles.scheduleContainer}>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              Class Schedule
+            </Text>
+            {timetable.map((session) => (
+              <TimetableCard
+                key={session.id}
+                session={session}
+                userRole="tutor"
+                onSessionPress={handleSessionPress}
+              />
+            ))}
+          </View>
+        )}
+
+        {selectedView === 'students' && (
+          <View style={styles.studentsContainer}>
+            <Text variant="bodyMedium" style={styles.placeholderText}>
+              Student management coming soon...
+            </Text>
+          </View>
+        )}
+
+        {selectedView === 'reports' && (
+          <View style={styles.reportsContainer}>
+            <Text variant="bodyMedium" style={styles.placeholderText}>
+              Attendance reports coming soon...
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => {}}
+      <AttendanceModal
+        visible={modalVisible}
+        session={selectedSession}
+        userRole="tutor"
+        onDismiss={() => setModalVisible(false)}
       />
     </SafeAreaView>
   );
@@ -50,13 +92,28 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 24,
   },
-  card: {
-    marginBottom: 16,
+  viewSelector: {
+    marginBottom: 24,
   },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+  scheduleContainer: {
+    flex: 1,
+  },
+  studentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reportsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    marginBottom: 16,
+    fontWeight: '600',
+  },
+  placeholderText: {
+    color: '#666',
+    fontStyle: 'italic',
   },
 });

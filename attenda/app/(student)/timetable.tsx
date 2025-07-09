@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, List, Chip } from 'react-native-paper';
+import { Text, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TimetableCard, TimetableSession } from '@/components/ui/TimetableCard';
+import { AttendanceModal } from '@/components/ui/AttendanceModal';
+import { getTimetableForUser } from '@/data/mockTimetable';
 
 export default function TimetableScreen() {
+  const [selectedDay, setSelectedDay] = useState('today');
+  const [selectedSession, setSelectedSession] = useState<TimetableSession | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const timetable = getTimetableForUser('student');
+
+  const handleSessionPress = (session: TimetableSession) => {
+    if (session.isActive) {
+      setSelectedSession(session);
+      setModalVisible(true);
+    }
+  };
+
+  const getFilteredSessions = () => {
+    // For demo purposes, showing all sessions
+    // In real app, filter by selected day
+    return timetable;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -11,55 +33,35 @@ export default function TimetableScreen() {
           My Timetable
         </Text>
 
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Today - Monday
-            </Text>
-            
-            <List.Item
-              title="Mathematics 101"
-              description="9:00 AM - 10:30 AM • Room 204"
-              left={(props) => <List.Icon {...props} icon="calculator" />}
-              right={() => <Chip mode="flat">Attended</Chip>}
-            />
-            
-            <List.Item
-              title="Physics 201"
-              description="11:00 AM - 12:30 PM • Room 301"
-              left={(props) => <List.Icon {...props} icon="atom-variant" />}
-              right={() => <Chip mode="outlined">Attended</Chip>}
-            />
-            
-            <List.Item
-              title="Chemistry 301"
-              description="2:00 PM - 3:30 PM • Lab 101"
-              left={(props) => <List.Icon {...props} icon="flask" />}
-              right={() => <Chip mode="outlined">Upcoming</Chip>}
-            />
-          </Card.Content>
-        </Card>
+        <SegmentedButtons
+          value={selectedDay}
+          onValueChange={setSelectedDay}
+          buttons={[
+            { value: 'today', label: 'Today' },
+            { value: 'tomorrow', label: 'Tomorrow' },
+            { value: 'week', label: 'This Week' },
+          ]}
+          style={styles.daySelector}
+        />
 
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
-              Tomorrow - Tuesday
-            </Text>
-            
-            <List.Item
-              title="English Literature"
-              description="10:00 AM - 11:30 AM • Room 105"
-              left={(props) => <List.Icon {...props} icon="book" />}
+        <View style={styles.sessionsContainer}>
+          {getFilteredSessions().map((session) => (
+            <TimetableCard
+              key={session.id}
+              session={session}
+              userRole="student"
+              onSessionPress={handleSessionPress}
             />
-            
-            <List.Item
-              title="Computer Science"
-              description="1:00 PM - 2:30 PM • Lab 201"
-              left={(props) => <List.Icon {...props} icon="laptop" />}
-            />
-          </Card.Content>
-        </Card>
+          ))}
+        </View>
       </ScrollView>
+
+      <AttendanceModal
+        visible={modalVisible}
+        session={selectedSession}
+        userRole="student"
+        onDismiss={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -75,10 +77,10 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 24,
   },
-  card: {
-    marginBottom: 16,
+  daySelector: {
+    marginBottom: 24,
   },
-  cardTitle: {
-    marginBottom: 16,
+  sessionsContainer: {
+    flex: 1,
   },
 });
