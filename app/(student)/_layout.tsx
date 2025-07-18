@@ -1,7 +1,10 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 
 export default function StudentLayout() {
+  const theme = useTheme();
+
   return (
     <Tabs
       screenOptions={{
@@ -13,11 +16,7 @@ export default function StudentLayout() {
           height: 80,
           paddingBottom: 20,
           paddingTop: 10,
-          height: 80,
-          paddingBottom: 20,
-          paddingTop: 10,
         },
-        tabBarLabelStyle: {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
@@ -35,10 +34,6 @@ export default function StudentLayout() {
               size={focused ? 32 : 24} 
               color={focused ? '#8B7CF6' : color} 
             />
-              name="home" 
-              size={focused ? 32 : 24} 
-              color={focused ? '#8B7CF6' : color} 
-            />
           ),
         }}
       />
@@ -48,10 +43,6 @@ export default function StudentLayout() {
           title: 'Attendance',
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialIcons 
-              name="check-circle" 
-              size={focused ? 32 : 24} 
-              color={focused ? '#8B7CF6' : color} 
-            />
               name="check-circle" 
               size={focused ? 32 : 24} 
               color={focused ? '#8B7CF6' : color} 
@@ -78,24 +69,19 @@ export default function StudentLayout() {
           title: 'Settings',
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialIcons 
-        name="settings"
-              size={focused ? 32 : 24} 
-          title: 'Settings',
-          tabBarIcon: ({ color, size, focused }) => (
-            <MaterialIcons 
               name="settings" 
               size={focused ? 32 : 24} 
               color={focused ? '#8B7CF6' : color} 
             />
+          ),
         }}
       />
       <Tabs.Screen
-        name="records"
         name="timetable"
-          title: 'Records',
+        options={{
           href: null, // Hide from tab bar
-              color={focused ? '#8B7CF6' : color} 
-            />
+        }}
+      />
     </Tabs>
   );
 }
