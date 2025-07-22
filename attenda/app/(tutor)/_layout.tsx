@@ -8,6 +8,7 @@ export default function TutorLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarStyle: {
@@ -24,35 +25,17 @@ export default function TutorLayout() {
         name="index"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ size, color }) => (
             <MaterialIcons name="dashboard" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="courses"
+        name="records"
         options={{
-          title: 'Courses',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="school" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="attendance"
-        options={{
-          title: 'Attendance',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="how-to-reg" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="reports"
-        options={{
-          title: 'Reports',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="assessment" size={size} color={color} />
+          title: 'Records',
+          tabBarIcon: ({ size, color }) => (
+            <MaterialIcons name="history" size={size} color={color} />
           ),
         }}
       />
@@ -60,9 +43,21 @@ export default function TutorLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ size, color }) => (
             <MaterialIcons name="settings" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="attendance"
+        options={{
+          href: null, // Hide this screen from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="history-detail"
+        options={{
+          href: null, // Hide this screen from tab bar
         }}
       />
     </Tabs>

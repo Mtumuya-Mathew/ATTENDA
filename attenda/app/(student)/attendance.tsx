@@ -1,98 +1,180 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, Card } from 'react-native-paper';
+import { useBLE } from '@/services/ble/BLEContext';
+import { MaterialIcons } from '@expo/vector-icons';
+import React from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TimetableCard, TimetableSession } from '@/components/ui/TimetableCard';
-import { AttendanceModal } from '@/components/ui/AttendanceModal';
-import { getTimetableForUser } from '@/data/mockTimetable';
+
+interface AttendanceRecord {
+  id: string;
+  subject: string;
+  lecturer: string;
+  time: string;
+  status: 'present' | 'absent';
+}
+
+const attendanceHistory: AttendanceRecord[] = [
+  {
+    id: '1',
+    subject: 'Software Development Life Cycle',
+    lecturer: 'Dr Ronald Tombe',
+    time: 'Today, 09:00 am',
+    status: 'present',
+  },
+  {
+    id: '2',
+    subject: 'Software Development Life Cycle',
+    lecturer: 'Dr Ronald Tombe',
+    time: 'Yesterday, 09:00 am',
+    status: 'absent',
+  },
+  {
+    id: '3',
+    subject: 'Software Development Life Cycle',
+    lecturer: 'Dr Ronald Tombe',
+    time: 'Today, 09:00 am',
+    status: 'present',
+  },
+];
 
 export default function AttendanceScreen() {
-  const [selectedSession, setSelectedSession] = useState<TimetableSession | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const {
+    startScanning,
+    stopScanning,
+    isScanning,
+    nearbyTutors,
+  } = useBLE();
 
-  const timetable = getTimetableForUser('student');
-  const activeSessions = timetable.filter(session => session.isActive);
-
-  const handleSessionPress = (session: TimetableSession) => {
-    setSelectedSession(session);
-    setModalVisible(true);
-  };
-
-  const handleQuickScan = () => {
-    // Quick scan for any available sessions
-    setSelectedSession(null);
-    setModalVisible(true);
+  const handleQuickScan = async () => {
+    if (!isScanning) {
+      await startScanning();
+      setTimeout(() => {
+        stopScanning();
+      }, 15000);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Mark Attendance
-        </Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Attendance</Text>
+        </View>
 
-        <Card style={styles.quickScanCard}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.quickScanTitle}>
-              Quick Attendance
-            </Text>
-            <Text variant="bodyMedium" style={styles.quickScanDescription}>
-              Scan for any nearby active sessions
-            </Text>
-            <Button
-              mode="contained"
-              onPress={handleQuickScan}
-              icon="bluetooth-connect"
-              style={styles.quickScanButton}
-            >
-              Start Quick Scan
-            </Button>
-          </Card.Content>
-        </Card>
-
-        <View style={styles.section}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Active Sessions
+        {/* Quick Attendance Card */}
+        <View style={styles.quickCard}>
+          <Text style={styles.quickTitle}>Quick Attendance.</Text>
+          <Text style={styles.quickSubtitle}>
+            Scan for any nearby active sessions.
           </Text>
-          
-          {activeSessions.length > 0 ? (
-            activeSessions.map((session) => (
-              <TimetableCard
-                key={session.id}
-                session={session}
-                userRole="student"
-                onSessionPress={handleSessionPress}
-              />
-            ))
-          ) : (
-            <Text variant="bodyMedium" style={styles.emptyText}>
-              No active sessions available
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={handleQuickScan}
+            disabled={isScanning}
+          >
+            <Text style={styles.scanButtonText}>
+              {isScanning ? 'Scanning...' : 'Start Quick Scan'}
             </Text>
+          </TouchableOpacity>
+
+          {/* Nearby Tutors */}
+          {nearbyTutors.length > 0 && (
+            <View style={styles.nearbyCard}>
+              <Text style={styles.nearbyTitle}>Nearby Tutors:</Text>
+              {nearbyTutors.map((tutor) => (
+                <View key={tutor.id} style={styles.tutorItem}>
+                  <Text style={styles.tutorName}>{tutor.name}</Text>
+                  <Text style={styles.tutorDetails}>
+                    Course: {tutor.course} | RSSI: {tutor.distance}
+                  </Text>
+                </View>
+              ))}
+            </View>
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Today's Schedule
-          </Text>
-          
-          {timetable.map((session) => (
-            <TimetableCard
-              key={session.id}
-              session={session}
-              userRole="student"
-              onSessionPress={handleSessionPress}
-            />
-          ))}
+        {/* Ongoing Class */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Ongoing Class</Text>
         </View>
-      </ScrollView>
 
-      <AttendanceModal
-        visible={modalVisible}
-        session={selectedSession}
-        userRole="student"
-        onDismiss={() => setModalVisible(false)}
-      />
+        <View style={styles.ongoingCard}>
+          <Text style={styles.ongoingSubject}>
+            Fundamentals of Software Engineering.
+          </Text>
+          <Text style={styles.ongoingLecturer}>Madam Teresa Abuya.</Text>
+
+          <View style={styles.ongoingDetails}>
+            <View style={styles.detailItem}>
+              <MaterialIcons name="access-time" size={20} color="#FFFFFF" />
+              <Text style={styles.detailText}>11:00 - 13:00</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <MaterialIcons name="location-on" size={20} color="#FFFFFF" />
+              <Text style={styles.detailText}>LH 4</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Attendance History */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Attendance history.</Text>
+        </View>
+
+        {attendanceHistory.map((record) => (
+          <View
+            key={record.id}
+            style={[
+              styles.historyCard,
+              record.status === 'absent' && styles.absentCard,
+            ]}
+          >
+            <Text
+              style={[
+                styles.historySubject,
+                record.status === 'absent' && styles.absentText,
+              ]}
+            >
+              {record.subject}.
+            </Text>
+            <Text
+              style={[
+                styles.historyLecturer,
+                record.status === 'absent' && styles.absentText,
+              ]}
+            >
+              {record.lecturer}.
+            </Text>
+            <Text
+              style={[
+                styles.historyTime,
+                record.status === 'absent' && styles.absentText,
+              ]}
+            >
+              {record.time}.
+            </Text>
+
+            <View style={styles.statusContainer}>
+              <MaterialIcons
+                name={record.status === 'present' ? 'check-circle' : 'cancel'}
+                size={24}
+                color={record.status === 'present' ? '#4CAF50' : '#F44336'}
+              />
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    color: record.status === 'present' ? '#4CAF50' : '#F44336',
+                  },
+                ]}
+              >
+                {record.status === 'present' ? 'Present' : 'Absent'}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -100,39 +182,158 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFBFE',
+    backgroundColor: '#E5E5E5',
   },
   content: {
-    padding: 16,
+    padding: 20,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
   title: {
-    marginBottom: 24,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  quickScanCard: {
-    marginBottom: 24,
-    backgroundColor: '#F7F2FA',
+  quickCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  quickScanTitle: {
+  quickTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 8,
   },
-  quickScanDescription: {
-    marginBottom: 16,
+  quickSubtitle: {
+    fontSize: 14,
     color: '#666',
+    marginBottom: 20,
   },
-  quickScanButton: {
-    alignSelf: 'flex-start',
+  scanButton: {
+    backgroundColor: '#A5B4FC',
+    borderRadius: 25,
+    paddingVertical: 15,
+    alignItems: 'center',
   },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    marginBottom: 16,
+  scanButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
   },
-  emptyText: {
+  nearbyCard: {
+    marginTop: 20,
+    backgroundColor: '#F0F4FF',
+    padding: 15,
+    borderRadius: 10,
+  },
+  nearbyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: '#333',
+  },
+  tutorItem: {
+    marginBottom: 10,
+  },
+  tutorName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1E3A8A',
+  },
+  tutorDetails: {
+    fontSize: 13,
+    color: '#555',
+  },
+  sectionHeader: {
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  ongoingCard: {
+    backgroundColor: '#A5B4FC',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 25,
+  },
+  ongoingSubject: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
     textAlign: 'center',
-    color: '#666',
-    fontStyle: 'italic',
-    paddingVertical: 20,
+    marginBottom: 8,
+  },
+  ongoingLecturer: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  ongoingDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 5,
+  },
+  historyCard: {
+    backgroundColor: '#A5B4FC',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
+  },
+  absentCard: {
+    backgroundColor: '#FF8A80',
+  },
+  historySubject: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  historyLecturer: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  historyTime: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  absentText: {
+    color: '#FFFFFF',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

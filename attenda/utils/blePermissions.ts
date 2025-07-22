@@ -1,73 +1,100 @@
-import { Platform, PermissionsAndroid } from 'react-native';
-import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
+import { useEffect, useState } from 'react';
+import DeviceInfo from 'react-native-device-info';
+import { Platform, Linking, Alert } from 'react-native';
+import {
+  checkMultiple,
+  requestMultiple,
+  openSettings,
+  PERMISSIONS,
+  RESULTS,
+} from 'react-native-permissions';
+import { PermissionsAndroid } from 'react-native';
 
-/**
- * Requests the necessary Bluetooth permissions based on platform and Android API level.
- * @returns {Promise<boolean>} - True if all required permissions are granted.
- */
-export async function requestBlePermissions(): Promise<boolean> {
-  try {
-    // For Android, we need to handle location permissions for Bluetooth scanning
-    // and Bluetooth permissions for scanning and connecting.
-    if (Platform.OS === 'android') {
-      // Check Android API level to determine permission requirements
-      // As of Android 12 (API level 31), new permissions are required for Bluetooth
-      const apiLevel = parseInt(Platform.Version.toString(), 10);
+type PermissionStatus = 'granted' | 'denied' | 'blocked' | 'unavailable';
 
-      // For API levels below 31, we need location permission for Bluetooth scanning
-      // For API levels 31 and above, we need BLUETOOTH_SCAN and BLUETOOTH_CONNECT permissions
-      // Note: ACCESS_FINE_LOCATION is still required for Bluetooth scanning on Android 12 and below  
-      if (apiLevel < 31) {
-    
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'Bluetooth scanning requires access to your location.',
-            buttonPositive: 'OK',
+export function useBlePermissions() {
+  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>('unavailable');
+
+  useEffect(() => {
+    requestPermissions();
+  }, []);
+
+  const requestPermissions = async () => {
+    try {
+      if (Platform.OS == 'android'){
+
+        const apiLevel = parseInt(Platform.Version.toString(), 10);
+
+        if (apiLevel >= 31) {
+          const statuses = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ]);
+
+          const scan = statuses[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN];
+          const connect = statuses[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT];
+          const location = statuses[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION];
+
+          if ([scan, connect, location].every((s) => s === PermissionsAndroid.RESULTS.GRANTED)) {
+            setPermissionStatus('granted');
+          } else {
+            setPermissionStatus('denied');
           }
-        );
+        } else {
+          const statuses = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ]);
 
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      }
+          const location = statuses[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION];
 
-      const scanGranted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-        {
-          title: 'Bluetooth Scan Permission',
-          message: 'App needs permission to scan nearby Bluetooth devices.',
-          buttonPositive: 'OK',
+          if (location === PermissionsAndroid.RESULTS.GRANTED) {
+            setPermissionStatus('granted');
+          } else if (location === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+            setPermissionStatus('blocked');
+          } else {
+            setPermissionStatus('denied');
+          }
         }
-      );
+       } else if (Platform.OS === 'ios') {
+        const statuses = await requestMultiple([
+          PERMISSIONS.IOS.BLUETOOTH,
+          PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
+        ]);
 
-      const connectGranted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-        {
-          title: 'Bluetooth Connect Permission',
-          message: 'App needs permission to connect to Bluetooth devices.',
-          buttonPositive: 'OK',
+        const bluetooth = statuses[PERMISSIONS.IOS.BLUETOOTH];
+        const location = statuses[PERMISSIONS.IOS.LOCATION_WHEN_IN_USE];
+
+        if ([bluetooth, location].every((s) => s === RESULTS.GRANTED)) {
+          setPermissionStatus('granted');
+        } else if ([bluetooth, location].some((s) => s === RESULTS.BLOCKED)) {
+          setPermissionStatus('blocked');
+        } else {
+          setPermissionStatus('denied');
         }
-      );
-
-      return (
-        
-        scanGranted === PermissionsAndroid.RESULTS.GRANTED &&
-        connectGranted === PermissionsAndroid.RESULTS.GRANTED
-      );
-    } else if (Platform.OS === 'ios') {
-      // For iOS, we need to check Bluetooth permissions
-      // iOS requires explicit permission for Bluetooth usage   
-      const status = await check(PERMISSIONS.IOS.BLUETOOTH);
-      if (status === RESULTS.DENIED) {
-         const result = await request(PERMISSIONS.IOS.BLUETOOTH);
-        return result === RESULTS.GRANTED;
       }
-      return status === RESULTS.GRANTED;
-    } else {
-      return false;
+    } catch (err) {
+      console.error('Permission error:', err);
+      setPermissionStatus('unavailable');
     }
-  } catch (error) {
-    console.error('BLE permission error:', error);
-    return false;
-  }
+  };
+
+  const promptOpenSettings = () => {
+    Alert.alert(
+      'Permissions Required',
+      'Bluetooth and Location permissions are required for this feature. Please enable them in settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => openSettings() },
+      ],
+    );
+  };
+
+  return {
+    permissionStatus,
+    requestPermissions,
+    isGranted: permissionStatus === 'granted',
+    promptOpenSettings,
+  };
 }

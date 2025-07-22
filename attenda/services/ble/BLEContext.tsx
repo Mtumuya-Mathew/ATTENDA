@@ -6,9 +6,9 @@ import React, {
   ReactNode,
 } from 'react';
 
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { NativeModules, NativeEventEmitter, View, Text, Button } from 'react-native';
 
-import { requestBlePermissions } from '@/utils/blePermissions';
+import { useBlePermissions } from '@/utils/blePermissions';
 
 const { AttendaBle } = NativeModules;
 const bleEmitter = new NativeEventEmitter(AttendaBle);
@@ -44,23 +44,41 @@ export function BLEProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const {
+  permissionStatus,
+  isGranted,
+  requestPermissions,
+  promptOpenSettings,
+} = useBlePermissions();
+
   const startAdvertising = async () => {
-    try {
-      console.log('Starting BLE advertising...');
+  try {
+    await requestPermissions();
 
-      // TODO: Replace these with real values from user/session
-      const schoolId = 'SCHOOL123';
-      const tutorId = 'TUTOR456';
-      const sessionId = 'SESSION789';
-      const classId = 'CLASS001';
-
-      await AttendaBle.startAdvertising(schoolId, tutorId, sessionId, classId);
-      setIsAdvertising(true);
-    } catch (error) {
-      console.error('Error starting advertising:', error);
-      throw error;
+    if (!isGranted) {
+      if (permissionStatus === 'blocked') {
+        promptOpenSettings();
+      }
+      throw new Error('BLE permissions not granted.');
     }
-  };
+
+    const schoolId = '1';
+    const tutorId = '123'; // This should be dynamically set based on the logged-in tutor
+    // Example session and class IDs, replace with actual values  
+    const sessionId = '7';
+    const classId = '001';
+
+    await AttendaBle.startAdvertising(schoolId, tutorId, sessionId, classId);
+    setIsAdvertising(true);
+
+    console.log('BLE advertising started successfully');
+
+  } catch (error) {
+    console.error('Error starting advertising:', error);
+    setIsAdvertising(false);
+    throw error;
+  }
+};
 
   const stopAdvertising = async () => {
     try {
@@ -74,8 +92,9 @@ export function BLEProvider({ children }: { children: ReactNode }) {
   };
 
   const startScanning = async () => {
-    try {const granted = await requestBlePermissions();
-      if (!granted) {
+    try {
+      await requestPermissions();
+      if (!isGranted) {
         console.warn('BLE permissions not granted.');
         return;
       }

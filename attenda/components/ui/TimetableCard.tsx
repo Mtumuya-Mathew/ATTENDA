@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 export interface TimetableSession {
   id: string;
   subject: string;
+  date?: string;
   time: string;
   room: string;
   tutor: string;
