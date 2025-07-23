@@ -1,100 +1,57 @@
-import { useEffect, useState } from 'react';
 import DeviceInfo from 'react-native-device-info';
-import { Platform, Linking, Alert } from 'react-native';
-import {
-  checkMultiple,
-  requestMultiple,
-  openSettings,
-  PERMISSIONS,
-  RESULTS,
-} from 'react-native-permissions';
-import { PermissionsAndroid } from 'react-native';
+import { PermissionsAndroid, Platform, Permission } from 'react-native';
 
-type PermissionStatus = 'granted' | 'denied' | 'blocked' | 'unavailable';
+const blePermissions = async () => {
+  if (Platform.OS !== 'android') return { isGranted: true };
 
-export function useBlePermissions() {
-  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>('unavailable');
+  const androidVersion = await DeviceInfo.getSystemVersion();
+  const majorAndroidVersion = parseInt(androidVersion.split('.')[0], 10);
+  console.log('Android Version:', androidVersion);
 
-  useEffect(() => {
-    requestPermissions();
-  }, []);
+  const requiredPermissions: Permission[] = [];
 
-  const requestPermissions = async () => {
-    try {
-      if (Platform.OS == 'android'){
-
-        const apiLevel = parseInt(Platform.Version.toString(), 10);
-
-        if (apiLevel >= 31) {
-          const statuses = await PermissionsAndroid.requestMultiple([
-            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-            PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          ]);
-
-          const scan = statuses[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN];
-          const connect = statuses[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT];
-          const location = statuses[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION];
-
-          if ([scan, connect, location].every((s) => s === PermissionsAndroid.RESULTS.GRANTED)) {
-            setPermissionStatus('granted');
-          } else {
-            setPermissionStatus('denied');
-          }
-        } else {
-          const statuses = await PermissionsAndroid.requestMultiple([
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          ]);
-
-          const location = statuses[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION];
-
-          if (location === PermissionsAndroid.RESULTS.GRANTED) {
-            setPermissionStatus('granted');
-          } else if (location === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-            setPermissionStatus('blocked');
-          } else {
-            setPermissionStatus('denied');
-          }
-        }
-       } else if (Platform.OS === 'ios') {
-        const statuses = await requestMultiple([
-          PERMISSIONS.IOS.BLUETOOTH,
-          PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
-        ]);
-
-        const bluetooth = statuses[PERMISSIONS.IOS.BLUETOOTH];
-        const location = statuses[PERMISSIONS.IOS.LOCATION_WHEN_IN_USE];
-
-        if ([bluetooth, location].every((s) => s === RESULTS.GRANTED)) {
-          setPermissionStatus('granted');
-        } else if ([bluetooth, location].some((s) => s === RESULTS.BLOCKED)) {
-          setPermissionStatus('blocked');
-        } else {
-          setPermissionStatus('denied');
-        }
-      }
-    } catch (err) {
-      console.error('Permission error:', err);
-      setPermissionStatus('unavailable');
-    }
-  };
-
-  const promptOpenSettings = () => {
-    Alert.alert(
-      'Permissions Required',
-      'Bluetooth and Location permissions are required for this feature. Please enable them in settings.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => openSettings() },
-      ],
+  if (majorAndroidVersion >= 12) {
+    requiredPermissions.push(
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE
     );
-  };
+  } else {
+    requiredPermissions.push(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+    );
+  }
 
-  return {
-    permissionStatus,
-    requestPermissions,
-    isGranted: permissionStatus === 'granted',
-    promptOpenSettings,
-  };
-}
+  try {
+    const grantedPermissions = await PermissionsAndroid.requestMultiple(requiredPermissions);
+    console.log('Permission results:', grantedPermissions);
+
+    const deniedPermissions: string[] = [];
+    const blockedPermissions: string[] = [];
+
+    for (const permission of requiredPermissions) {
+      const status = grantedPermissions[permission];
+      if (status === PermissionsAndroid.RESULTS.DENIED) {
+        deniedPermissions.push(permission);
+      } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+        blockedPermissions.push(permission);
+      }
+    }
+
+    if (blockedPermissions.length > 0) {
+      console.warn('Permissions permanently denied:', blockedPermissions);
+      return { isGranted: false, blockedPermissions };
+    }
+
+    if (deniedPermissions.length > 0) {
+      console.warn('Permissions denied:', deniedPermissions);
+      return { isGranted: false, deniedPermissions };
+    }
+
+    return { isGranted: true };
+  } catch (err) {
+    console.warn('Permission request error:', err);
+    return { isGranted: false, error: err };
+  }
+};
+
+export default blePermissions;
