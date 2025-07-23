@@ -50,7 +50,7 @@ export default function AttendanceScreen() {
       await startScanning();
       setTimeout(() => {
         stopScanning();
-      }, 15000);
+      }, 150000);
     }
   };
 

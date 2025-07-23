@@ -16,7 +16,7 @@ export default function AttendanceScreen() {
       await startAdvertising();
       setTimeout(() => {
         stopAdvertising();
-      }, 15000);
+      }, 30000);
     }
   };
 
