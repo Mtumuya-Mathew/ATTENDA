@@ -70,7 +70,7 @@ export default function StudentDashboard() {
 
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeText}>Welcome back, John Momanyi</Text>
+          <Text style={styles.welcomeText}>Welcome back, {user?.role || user?.name || "Student"}</Text>
           
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>

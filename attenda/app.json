@@ -46,6 +46,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4b5a97f2-3e08-4f37-88a4-b50f2f9d3317"
+      }
+    },
+    "owner": "mathewwadero"
   }
 }

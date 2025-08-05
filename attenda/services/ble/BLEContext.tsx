@@ -56,16 +56,18 @@ export function BLEProvider({ children }: { children: ReactNode }) {
       throw new Error('BLE permissions not granted.');
     }
 
-    const schoolId = '1';
-    const tutorId = '123';
+    const courseId = '1';
+    const tutorId = '3';
     const sessionId = '7';
     const classId = '001';
 
-    await AttendaBle.startAdvertising(schoolId, tutorId, sessionId, classId);
+    await AttendaBle.startAdvertising(courseId, tutorId, sessionId, classId);
     setIsAdvertising(true);
     console.log('BLE advertising started successfully');
+    
   } catch (error) {
     console.error('Error starting advertising:', error);
+    alert('Failed to start BLE advertising. Please check permissions or turn on your Bluetooth and try again.');
     setIsAdvertising(false);
     throw error;
   }
@@ -101,12 +103,12 @@ export function BLEProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setIsScanning(true);
-    setNearbyTutors([]);
 
     bleEmitter.addListener('onDeviceFound', (device) => {
-      const tutorId = device.address || 'unknown';
+      const tutorId = device.id || 'unknown';
       const rssi = device.rssi || 0;
+      console.log('Device found: ', device);
+
 
       setNearbyTutors((prev) => {
         if (prev.some((t) => t.id === tutorId)) return prev;
@@ -121,6 +123,12 @@ export function BLEProvider({ children }: { children: ReactNode }) {
         ];
       });
     });
+
+    setIsScanning(true);
+    setNearbyTutors([]);
+    
+    console.log(nearbyTutors);
+
 
     await AttendaBle.startScanning();
   } catch (error) {

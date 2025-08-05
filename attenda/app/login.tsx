@@ -31,16 +31,16 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      await login(email, password, role as 'student' | 'tutor' | 'admin');
-      
+      await login(email, password, role as 'Student' | 'Tutor' | 'Admin');
+
       switch (role) {
-        case 'tutor':
+        case 'Tutor':
           router.replace('/(tutor)');
           break;
-        case 'student':
+        case 'Student':
           router.replace('/(student)');
           break;
-        case 'admin':
+        case 'Admin':
           router.replace('/(admin)');
           break;
       }
@@ -73,9 +73,9 @@ export default function LoginScreen() {
               value={role}
               onValueChange={setRole}
               buttons={[
-                { value: 'student', label: 'Student' },
-                { value: 'tutor', label: 'Tutor' },
-                { value: 'admin', label: 'Admin' },
+                { value: 'Student', label: 'Student' },
+                { value: 'Tutor', label: 'Tutor' },
+                { value: 'Admin', label: 'Admin' },
               ]}
               style={styles.roleSelector}
             />

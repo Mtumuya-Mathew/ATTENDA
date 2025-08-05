@@ -6,7 +6,7 @@ export interface User {
   regNumber: string;
   name: string;
   password?: string;
-  role: 'student' | 'tutor' | 'admin';
+  role: 'Student' | 'Tutor' | 'Admin';
   deviceId?: string;
 }
 
@@ -44,16 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (regNumber: string, password: string, role: string) => {
     try {
       // Mock login - in production, this would be an API call
-      const mockUser: User = {
-        id: Date.now().toString(),
-        regNumber: regNumber,
-        name: role === 'student' ? 'John Doe' : role === 'tutor' ? 'Dr. Smith' : 'Admin User',
-        role: role as 'student' | 'tutor' | 'admin',
-        deviceId: role === 'student' ? `device-${Date.now()}` : undefined,
-      };
+      
 
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
     } catch (error) {
       throw new Error('Login failed');
     }
@@ -75,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         regNumber: userData.regNumber!,
         name: userData.name!,
         role: userData.role!,
-        deviceId: userData.role === 'student' ? `device-${Date.now()}` : undefined,
+        deviceId: userData.role === 'Student' ? `device-${Date.now()}` : undefined,
       };
 
       await AsyncStorage.setItem('user', JSON.stringify(newUser));

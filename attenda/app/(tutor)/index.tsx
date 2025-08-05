@@ -5,11 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useBLE } from "@/services/ble/BLEContext";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/services/auth/AuthContext";
 
 
 export default function AttendanceScreen() {
   const { startAdvertising, stopAdvertising, isScanning, nearbyTutors } = useBLE();
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleQuickScan = async () => {
     if (!isScanning) {
@@ -62,7 +64,7 @@ export default function AttendanceScreen() {
 
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeText}>Welcome back, Dr. Ronald Tombe</Text>
+          <Text style={styles.welcomeText}>Welcome back, {user?.role || user?.name || "Student"}</Text>
           <Text style={styles.classCountText}>You have 3 classes today.</Text>
         </View>
 
